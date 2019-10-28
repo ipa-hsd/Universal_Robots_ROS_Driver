@@ -49,6 +49,16 @@ public:
   virtual ~DashboardClientROS() = default;
 
 private:
+  inline ros::ServiceServer create_dashboard_trigger_srv(const std::string& topic, const std::string& command,
+                                                         const std::string& expected)
+  {
+    return nh_.advertiseService<std_srvs::Trigger::Request, std_srvs::Trigger::Response>(
+        topic, [&, command, expected](std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& resp) {
+          resp.message = this->client_.sendAndReceive(command);
+          resp.success = std::regex_match(resp.message, std::regex(expected));
+          return true;
+        });
+  }
   ros::NodeHandle nh_;
   ur_driver::DashboardClient client_;
 

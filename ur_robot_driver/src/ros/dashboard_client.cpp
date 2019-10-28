@@ -34,66 +34,55 @@ DashboardClientROS::DashboardClientROS(const ros::NodeHandle& nh, const std::str
 {
   client_.connect();
 
-#ifndef ADVERTISE_DASBOARD_TRIGGER_SRV
-#define ADVERTISE_DASBOARD_TRIGGER_SRV(topic, command, expected)                                                       \
-  nh_.advertiseService<std_srvs::Trigger::Request, std_srvs::Trigger::Response>(                                       \
-      topic, [&](std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& resp) {                                 \
-        resp.message = client_.sendAndReceive(command);                                                                \
-        resp.success = std::regex_match(resp.message, std::regex(expected));                                           \
-        return true;                                                                                                   \
-      })
-#else
-#error The macro ADVERTISE_DASBOARD_TRIGGER_SRV is already defined somewhere else. This should not happen!
-#endif
-
   // Service to release the brakes. If the robot is currently powered off, it will get powered on on the fly.
-  brake_release_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("brake_release", "brake release\n", "Brake releasing");
+  // brake_release_service_ = create_dashboard_trigger_srv("brake_release", "brake release\n", "Brake releasing");
+  brake_release_service_ = create_dashboard_trigger_srv("brake_release", "brake release\n", "Brake releasing");
 
   // If this service is called the operational mode can again be changed from PolyScope, and the user password is
   // enabled.
-  clear_operational_mode_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("clear_operational_mode", "clear operational mode\n",
-                                                                   "No longer controlling the operational mode\\. "
-                                                                   "Current "
-                                                                   "operational mode: "
-                                                                   "'(MANUAL|AUTOMATIC)'\\.");
+  clear_operational_mode_service_ = create_dashboard_trigger_srv("clear_operational_mode", "clear operational mode\n",
+                                                                 "No longer controlling the operational mode\\. "
+                                                                 "Current "
+                                                                 "operational mode: "
+                                                                 "'(MANUAL|AUTOMATIC)'\\.");
 
   // Close a (non-safety) popup on the teach pendant.
-  close_popup_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("close_popup", "close popup\n", "closing popup");
+  close_popup_service_ = create_dashboard_trigger_srv("close_popup", "close popup\n", "closing popup");
 
   // Close a safety popup on the teach pendant.
   close_safety_popup_service_ =
-      ADVERTISE_DASBOARD_TRIGGER_SRV("close_safety_popup", "close safety popup\n", "closing safety popup");
+      create_dashboard_trigger_srv("close_safety_popup", "close safety popup\n", "closing safety popup");
 
   // Pause a running program.
-  pause_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("pause", "pause\n", "Pausing program");
+  pause_service_ = create_dashboard_trigger_srv("pause", "pause\n", "Pausing program");
 
   // Start execution of a previously loaded program
-  play_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("play", "play\n", "Starting program");
+  play_service_ = create_dashboard_trigger_srv("play", "play\n", "Starting program");
 
   // Power off the robot motors
-  power_off_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("power_off", "power off\n", "Powering off");
+  power_off_service_ = create_dashboard_trigger_srv("power_off", "power off\n", "Powering off");
 
   // Power on the robot motors. To fully start the robot, call 'brake_release' afterwards.
-  power_on_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("power_on", "power on\n", "Powering on");
+  power_on_service_ = create_dashboard_trigger_srv("power_on", "power on\n", "Powering on");
 
   // Disconnect from the dashboard service. Currently, there's no way of reconnecting.
-  quit_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("quit", "quit\n", "Disconnected");
+  quit_service_ = create_dashboard_trigger_srv("quit", "quit\n", "Disconnected");
 
   // Used when robot gets a safety fault or violation to restart the safety. After safety has been rebooted the robot
   // will be in Power Off. NOTE: You should always ensure it is okay to restart the system. It is highly recommended to
   // check the error log before using this command (either via PolyScope or e.g. ssh connection).
-  restart_safety_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("restart_safety", "restart safety\n", "Restarting safety");
+  restart_safety_service_ = create_dashboard_trigger_srv("restart_safety", "restart safety\n", "Restarting safety");
 
   // Shutdown the robot controller
-  shutdown_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("shutdown", "shutdown\n", "Shutting down");
+  shutdown_service_ = create_dashboard_trigger_srv("shutdown", "shutdown\n", "Shutting down");
 
   // Stop program execution on the robot
-  stop_service_ = ADVERTISE_DASBOARD_TRIGGER_SRV("stop", "stop\n", "Stopped");
+  stop_service_ = create_dashboard_trigger_srv("stop", "stop\n", "Stopped");
 
   // Dismiss a protective stop to continue robot movements. NOTE: It is the responsibility of the user to ensure the
   // cause of the protective stop is resolved before calling this service.
   unlock_protective_stop_service_ =
-      ADVERTISE_DASBOARD_TRIGGER_SRV("unlock_protective_stop", "unlock protective stop\n", "Protective stop releasing");
+      create_dashboard_trigger_srv("unlock_protective_stop", "unlock protective stop\n", "Protective stop releasing");
 }
 
 }  // namespace ur_driver
