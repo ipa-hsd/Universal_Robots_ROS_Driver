@@ -83,6 +83,47 @@ DashboardClientROS::DashboardClientROS(const ros::NodeHandle& nh, const std::str
   // cause of the protective stop is resolved before calling this service.
   unlock_protective_stop_service_ =
       create_dashboard_trigger_srv("unlock_protective_stop", "unlock protective stop\n", "Protective stop releasing");
+
+  // Query the name of the currently loaded program
+  get_loaded_program_service_ =
+      create_dashboard_trigger_srv("get_loaded_program", "get loaded program\n", "TODO: Answer");
+
+  // Query whether there is currently a program running
+  running_service_ = nh_.advertiseService("running", &DashboardClientROS::handleRunningQuery, this);
+
+  // Service to show a popup on the UR Teach pendant.
+  popup_service_ = nh_.advertiseService<ur_dashboard_msgs::Popup::Request, ur_dashboard_msgs::Popup::Response>(
+      "popup", [&](ur_dashboard_msgs::Popup::Request& req, ur_dashboard_msgs::Popup::Response& resp) {
+        resp.answer = this->client_.sendAndReceive("popup " + req.message + "\n");
+        resp.success = std::regex_match(resp.answer, std::regex("showing popup"));
+
+        return true;
+      });
+
+  // General purpose service to send arbitrary messages to the dashboard server
+  running_service_ =
+      nh_.advertiseService<ur_dashboard_msgs::RawRequest::Request, ur_dashboard_msgs::RawRequest::Response>(
+          "raw_request",
+          [&](ur_dashboard_msgs::RawRequest::Request& req, ur_dashboard_msgs::RawRequest::Response& resp) {
+            resp.answer = this->client_.sendAndReceive(req.query + "\n");
+            return true;
+          });
+}
+
+bool DashboardClientROS::handleRunningQuery(ur_dashboard_msgs::IsProgramRunning::Request& req,
+                                            ur_dashboard_msgs::IsProgramRunning::Response& resp)
+{
+  resp.answer = this->client_.sendAndReceive("running\n");
+  std::regex expected("Program running: (true|false)");
+  std::smatch match;
+  resp.success = std::regex_match(resp.answer, match, expected);
+
+  if (resp.success)
+  {
+    resp.program_running = (match[1] == "true");
+  }
+
+  return true;
 }
 
 }  // namespace ur_driver
