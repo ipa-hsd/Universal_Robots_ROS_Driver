@@ -44,17 +44,23 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+# Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  ProgramState.msg
+  SafetyMode.msg
+)
 
 # Generate services in the 'srv' folder
 add_service_files(
   FILES
+  AddToLog.srv
+  GetLoadedProgram.srv
+  GetProgramState.srv
+  GetSafetyMode.srv
   IsProgramRunning.srv
+  IsProgramSaved.srv
+  Load.srv
   Popup.srv
   RawRequest.srv
 )
